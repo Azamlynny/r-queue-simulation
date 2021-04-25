@@ -14,7 +14,7 @@ carEntry = rpois(simulationMinutes, carEPM)
 mainMealPrice = round(rnorm(sum(mainEntry)) * 3 + 10,2) 
 carMealPrice = round(rnorm(sum(carEntry)) * 3 + 12,2) 
 
-qplot(mainMealPrice)
+qplot(carEntry)
 qplot(carMealPrice)
 
 dflogs <- data.frame () # Dataframe to track queues
