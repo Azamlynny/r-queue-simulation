@@ -10,7 +10,7 @@ carServerNumber = 1
 mainServerSkill = rnorm(mainServerNumber) + 3 # Generates an array of normal distribution values 
 carServerSkill = rnorm(carServerNumber) + 3
 
-cookNumber = 5
+cookNumber = 50
 cookSkill = rnorm(cookNumber) + 5
 qplot(cookSkill)
 
@@ -67,12 +67,17 @@ for(i in 1:cookNumber){
 }
 hist(as.integer(dfcook[1,]))
 
+
+
 # Convert to timestamp notation
 for(i in 1:cookNumber){
   for(j in 1:(length(dfcook[i,]) - 1)){
     dfcook[i,j+1] <- dfcook[i,j+1] + dfcook[i,j] 
   }
 }
+
+mainPlace <- 1
+carPlace <- 1
 
 for(t in 1:simulationMinutes){
   
@@ -104,7 +109,7 @@ for(t in 1:simulationMinutes){
     colnames(dfcar) <- c('Client Number','Meal Price', 'State', "Entry Time", "Order Time", "Served Time")
   }
 
-    # Cook modeling
+  # Cook modeling
   for(i in 1:length(dfcook[,1])){
     for(j in 1:length(dfcook[i,])){
       if(dfcook[i,j] > t){
@@ -116,6 +121,28 @@ for(t in 1:simulationMinutes){
         }
         materials <- materials + costPerMeal
       }    
+    }
+  }
+
+  # Server modeling
+  for(j in 1:length(dfmain[,1])){
+    if(dfmain[j,3] == "Ordering"){
+      if(storage >= round((as.numeric(dfmain[j,2]) / pricePerMeal),2)){
+        for(i in 1:length(dfmainserver[,1])){
+          dfmainserver[i,mainPlace] <- dfmainserver[i,mainPlace] - 1
+          if(dfmainserver[i,mainPlace] == 0){
+            mainPlace <- mainPlace + 1 
+            sales <- sales + as.numeric(dfmain[j,2])
+            storage <- round(storage - (as.numeric(dfmain[j,2]) / pricePerMeal), 2)
+            dfmain[j,6] <- t
+            dfmain[j,3] <- "Served"
+            mainQueue <- mainQueue - 1
+              
+          }
+          break
+
+        }
+      }
     }
   }
   
@@ -151,7 +178,10 @@ for(t in 1:simulationMinutes){
       }
     }
   }
-  print(t)
+  
+  if(t %% 60 == 0){
+    print(t)
+  }
 }
 
 colnames(dflogs) <- c('Minute','Main Queue', 'Car Queue', 'storage', 'Sales', 'Materials', 'Wages', 'Profits')
@@ -162,5 +192,6 @@ y_rexp <- ceiling(rexp(1, rate = 0.2))
 hist(y_rexp)
 print(y_rexp)
 
+qplot(dflogs$Minute, dflogs$storage)
 
 qplot(dflogs$Minute, dflogs$`Main Queue`)
