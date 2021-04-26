@@ -45,6 +45,18 @@ carClientNumber = 0
 mainInitialized = FALSE
 carInitialized = FALSE
 
+dfserver <- data.frame () # Dataframe to track servers - server 1 for main, server 2 for drive through
+dfcook <- data.frame () # Dataframe to track cooks
+for(i in 1:serverNumber){
+  dfserver <- rbind(dfserver, ceiling(rexp(720,rate = 1/serverSkill[i])))
+}
+hist(as.integer(dfserver[1,]))
+for(i in 1:cookNumber){
+  dfcook <- rbind(dfcook, ceiling(rexp(720,rate = 1/cookSkill[i])))
+}
+hist(as.integer(dfcook[1,]))
+
+
 for(t in 1:simulationMinutes){
   
   if(mainEntry[t] != 0){
@@ -82,6 +94,7 @@ for(t in 1:simulationMinutes){
   
   dflogs <- rbind(dflogs, c(t, mainQueue, carQueue, sales, salaries, profits))
   
+  # Main and car queue leaving modeled by exponential distribution
   if(mainInitialized){
     for(i in 1:length(dfmain[,1])){
       if(dfmain[i,3] == 'Ordering'){
@@ -93,7 +106,6 @@ for(t in 1:simulationMinutes){
       }
     }
   }
-  
   if(carInitialized){
     for(i in 1:length(dfcar[,1])){
       if(dfcar[i,3] == 'Ordering'){
@@ -115,3 +127,6 @@ print(sum(mainEntry))
 y_rexp <- ceiling(rexp(1, rate = 0.2))
 hist(y_rexp)
 print(y_rexp)
+
+
+qplot(dflogs$Minute, dflogs$`Main Queue`)
