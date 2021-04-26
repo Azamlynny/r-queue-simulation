@@ -1,9 +1,14 @@
 library("ggplot2")
 library("dplyr")
 
-serverNumber = 2
-serverSkill = rnorm(serverNumber) + 3 # Generates an array of normal distribution values 
-qplot(serverSkill)
+pricePerMeal = 4.00 # Price one meal unit is sold at
+costPerMeal = 2.80 # Price to produce one meal unit
+wageRate = 8.00 
+
+mainServerNumber = 1
+carServerNumber = 1
+mainServerSkill = rnorm(mainServerNumber) + 3 # Generates an array of normal distribution values 
+carServerSkill = rnorm(carServerNumber) + 3
 
 cookNumber = 5
 cookSkill = rnorm(cookNumber) + 5
@@ -33,7 +38,7 @@ dflogs <- data.frame () # Dataframe to track queues
 mainQueue = 0
 carQueue = 0
 sales = 0
-salaries = 0
+materials = 0
 profits = 0
 
 dfmain <- data.frame () # Dataframe to track main queue
@@ -45,12 +50,18 @@ carClientNumber = 0
 mainInitialized = FALSE
 carInitialized = FALSE
 
-dfserver <- data.frame () # Dataframe to track servers - server 1 for main, server 2 for drive through
+dfmainserver <- data.frame () # Dataframe to track servers in main entrance
+dfcarserver <- data.frame () # Dataframe to track servers in main entrance
 dfcook <- data.frame () # Dataframe to track cooks
-for(i in 1:serverNumber){
-  dfserver <- rbind(dfserver, ceiling(rexp(720,rate = 1/serverSkill[i])))
+for(i in 1:mainServerNumber){
+  dfmainserver <- rbind(dfmainserver, ceiling(rexp(720,rate = 1/mainServerSkill[i])))
 }
-hist(as.integer(dfserver[1,]))
+hist(as.integer(dfmainserver[1,]))
+for(i in 1:mainServerNumber){
+  dfcarserver <- rbind(dfcarserver, ceiling(rexp(720,rate = 1/carServerSkill[i])))
+}
+hist(as.integer(dfcarserver[1,]))
+
 for(i in 1:cookNumber){
   dfcook <- rbind(dfcook, ceiling(rexp(720,rate = 1/cookSkill[i])))
 }
@@ -89,10 +100,11 @@ for(t in 1:simulationMinutes){
   mainQueue <- mainQueue + mainEntry[t]
   carQueue <- carQueue + carEntry[t]
 
+  wages <- round((carServerNumber + mainServerNumber + cookNumber) * wageRate * (t/60),2)
   
-  profits <- sales - salaries 
+  profits <- sales - materials - wages
   
-  dflogs <- rbind(dflogs, c(t, mainQueue, carQueue, sales, salaries, profits))
+  dflogs <- rbind(dflogs, c(t, mainQueue, carQueue, sales, materials, wages, profits))
   
   # Main and car queue leaving modeled by exponential distribution
   if(mainInitialized){
@@ -120,7 +132,7 @@ for(t in 1:simulationMinutes){
   
 }
 
-colnames(dflogs) <- c('Minute','Main Queue', 'Car Queue', 'Sales', 'Salaries', 'Profits')
+colnames(dflogs) <- c('Minute','Main Queue', 'Car Queue', 'Sales', 'Materials', 'Wages', 'Profits')
 
 print(sum(mainEntry))
 
