@@ -1,9 +1,13 @@
 library("ggplot2")
 library("dplyr")
 
-serverNumber = 30
-serverSkill = rnorm(serverNumber) + 5 # Generates an array of normal distribution values 
+serverNumber = 2
+serverSkill = rnorm(serverNumber) + 3 # Generates an array of normal distribution values 
 qplot(serverSkill)
+
+cookNumber = 5
+cookSkill = rnorm(cookNumber) + 5
+qplot(cookSkill)
 
 mainEPM = 2 # Main entrance per minute
 carEPM = 1 # Car entrance per minute
@@ -36,6 +40,12 @@ for(t in 1:simulationMinutes){
     for(i in 1:mainEntry[t]){
       dfmain <- rbind(dfmain, c(mainClientNumber, mainMealPrice[mainClientNumber], 'Ordering', t, '', ''))
       mainClientNumber <- mainClientNumber + 1
+    }
+  }
+  
+  if(carEntry[t] != 0){
+    for(i in 1:carEntry[t]){
+      dfcar <- rbind(dfcar, c(carClientNumber, carMealPrice[carClientNumber], 'Ordering', t, '', ''))
       carClientNumber <- carClientNumber + 1
     }
   }
@@ -54,3 +64,6 @@ colnames(dfcar) <- c('Client Number','Meal Price', 'State', "Entry Time", "Order
 
 print(sum(mainEntry))
 
+y_rexp <- floor(rexp(50, rate = 0.2))
+hist(y_rexp)
+print(y_rexp)
