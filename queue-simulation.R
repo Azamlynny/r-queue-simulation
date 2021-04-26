@@ -67,6 +67,12 @@ for(i in 1:cookNumber){
 }
 hist(as.integer(dfcook[1,]))
 
+# Convert to timestamp notation
+for(i in 1:cookNumber){
+  for(j in 1:(length(dfcook[i,]) - 1)){
+    dfcook[i,j+1] <- dfcook[i,j+1] + dfcook[i,j] 
+  }
+}
 
 for(t in 1:simulationMinutes){
   
@@ -90,11 +96,27 @@ for(t in 1:simulationMinutes){
     }
   }
   
+  # Prevent errors with indexing
   if(mainInitialized){
     colnames(dfmain) <- c('Client Number','Meal Price', 'State', "Entry Time", "Order Time", "Served Time")
   }
   if(carInitialized){
     colnames(dfcar) <- c('Client Number','Meal Price', 'State', "Entry Time", "Order Time", "Served Time")
+  }
+
+    # Cook modeling
+  for(i in 1:length(dfcook[,1])){
+    for(j in 1:length(dfcook[i,])){
+      if(dfcook[i,j] > t){
+        break
+      }
+      if(dfcook[i,j] == t){
+        if(storage < storageCapacity){
+          storage <- storage + 1
+        }
+        materials <- materials + costPerMeal
+      }    
+    }
   }
   
   mainQueue <- mainQueue + mainEntry[t]
@@ -104,7 +126,7 @@ for(t in 1:simulationMinutes){
   
   profits <- sales - materials - wages
   
-  dflogs <- rbind(dflogs, c(t, mainQueue, carQueue, sales, materials, wages, profits))
+  dflogs <- rbind(dflogs, c(t, mainQueue, carQueue, storage, sales, materials, wages, profits))
   
   # Main and car queue leaving modeled by exponential distribution
   if(mainInitialized){
@@ -129,10 +151,10 @@ for(t in 1:simulationMinutes){
       }
     }
   }
-  
+  print(t)
 }
 
-colnames(dflogs) <- c('Minute','Main Queue', 'Car Queue', 'Sales', 'Materials', 'Wages', 'Profits')
+colnames(dflogs) <- c('Minute','Main Queue', 'Car Queue', 'storage', 'Sales', 'Materials', 'Wages', 'Profits')
 
 print(sum(mainEntry))
 
