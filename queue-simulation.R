@@ -94,6 +94,18 @@ for(t in 1:simulationMinutes){
     }
   }
   
+  if(carInitialized){
+    for(i in 1:length(dfcar[,1])){
+      if(dfcar[i,3] == 'Ordering'){
+        if((t - as.integer(dfcar[i,4])) >= carLeave[i]){
+          carQueue <- carQueue - 1
+          dfcar[i,3] <- 'Left'
+          dfcar[i,6] <- t
+        }
+      }
+    }
+  }
+  
 }
 
 colnames(dflogs) <- c('Minute','Main Queue', 'Car Queue', 'Sales', 'Salaries', 'Profits')
