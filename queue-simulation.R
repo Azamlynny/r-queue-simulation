@@ -68,11 +68,20 @@ for(i in 1:cookNumber){
 hist(as.integer(dfcook[1,]))
 
 
-
 # Convert to timestamp notation
 for(i in 1:cookNumber){
   for(j in 1:(length(dfcook[i,]) - 1)){
     dfcook[i,j+1] <- dfcook[i,j+1] + dfcook[i,j] 
+  }
+}
+for(i in 1:mainServerNumber){
+  for(j in 1:(length(dfmainserver[i,]) -1)){
+    dfmainserver[i,j+1] <- dfmainserver[i,j+1] + dfmainserver[i,j]
+  }
+}
+for(i in 1:carServerNumber){
+  for(j in 1:(length(dfcarserver[i,]) -1)){
+    dfcarserver[i,j+1] <- dfcarserver[i,j+1] + dfcarserver[i,j]
   }
 }
 
