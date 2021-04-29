@@ -132,52 +132,34 @@ for(t in 1:simulationMinutes){
       }    
     }
   }
-
+  
   # Server modeling
-  # if(mainInitialized){
-  #   for(j in 1:length(dfmain[,1])){
-  #     if(dfmain[j,3] == "Ordering"){
-  #       if(storage >= round((as.numeric(dfmain[j,2]) / pricePerMeal),2)){
-  #         for(i in 1:length(dfmainserver[,1])){
-  #           dfmainserver[i,mainPlace] <- dfmainserver[i,mainPlace] - 1
-  #           if(dfmainserver[i,mainPlace] == 0){
-  #             mainPlace <- mainPlace + 1 
-  #             sales <- sales + as.numeric(dfmain[j,2])
-  #             storage <- round(storage - (as.numeric(dfmain[j,2]) / pricePerMeal), 2)
-  #             dfmain[j,6] <- t
-  #             dfmain[j,3] <- "Served"
-  #             mainQueue <- mainQueue - 1
-  #           }
-  #           break
-  #         }
-  #       }
-  #     }
-  #   }
-  # }
+  if(mainInitialized){
+    for(i in 1:length(dfmain[,1])){
+      if(dfmain[i,3] == "Ordering" && storage >= round((as.numeric(dfmain[i,2]) / pricePerMeal),2)){
+        for(j in 1:length(dfmainserver[,1])){
+          for(k in 1:length(dfmainserver[j,])){
+            if(dfmainserver[j,k] > t){
+              break
+            }
+            if(dfmainserver[j,k] == t){
+              mainPlace <- mainPlace + 1
+              sales <- sales + as.numeric(dfmain[i,2])
+              storage <- round(storage - (as.numeric(dfmain[i,2]) / pricePerMeal), 2)
+              dfmain[i,6] <- t
+              dfmain[i,3] <- "Served"
+              mainQueue <- mainQueue - 1
+            }
+          }
+        }
+      }
+    }
+  }
+  
 
-  # if(carInitialized){
-  #   for(j in 1:length(dfcar[,1])){
-  #     if(dfcar[j,3] == "Ordering"){
-  #       if(storage >= round((as.numeric(dfcar[j,2]) / pricePerMeal),2)){
-  #         for(i in 1:length(dfcarserver[,1])){
-  #           dfcarserver[i,carPlace] <- dfcarserver[i,carPlace] - 1
-  #           if(dfcarserver[i,carPlace] == 0){
-  #             carPlace <- carPlace + 1
-  #             sales <- sales + as.numeric(dfcar[j,2])
-  #             storage <- round(storage - (as.numeric(dfcar[j,2]) / pricePerMeal), 2)
-  #             dfcar[j,6] <- t
-  #             dfcar[j,3] <- "Served"
-  #             carQueue <- carQueue - 1
-  #           }
-  #           break
-  #         }
-  #       }
-  #     }
-  #   }
-  # }
   
   mainQueue <- mainQueue + mainEntry[t]
-  # carQueue <- carQueue + carEntry[t]
+  carQueue <- carQueue + carEntry[t]
 
   wages <- round((carServerNumber + mainServerNumber + cookNumber) * wageRate * (t/60),2)
   
@@ -208,11 +190,9 @@ for(t in 1:simulationMinutes){
       }
     }
   }
-  
-  print(t)
-  
+  print(cat(t, "/","720"))
   # if(t %% 60 == 0){
-  #   print(t)
+  #   print(cat(t, "/","720"))
   # }
 }
 
