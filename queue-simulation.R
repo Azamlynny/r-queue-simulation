@@ -275,6 +275,15 @@ grid.arrange(p5,nrow=1)
 
 grid.arrange(p1,p2,p3,p4,p5, nrow=2, ncol=3)
 
+# File saving
+ggsave(plot=p1, filename="Queue_Lines.png", width=8, height=4)
+ggsave(plot=p2, filename="Food_Storage.png", width=8, height=4)
+ggsave(plot=p3, filename="Expense_Breakdown.png", width=4, height=4)
+ggsave(plot=p4, filename="Main_Time_To_Serve.png", width=8, height=4)
+ggsave(plot=p5, filename="Car_Time_To_Serve.png", width=8, height=4)
+
+
+
 # Print program execution time
 end_time <- Sys.time()
 cat("Execution time:", end_time - start_time, "minutes")
