@@ -1,5 +1,6 @@
 library("ggplot2")
 library("dplyr")
+library("gridExtra")
 
 ##########################  GENERAL SETTINGS  #############################
 
@@ -16,7 +17,7 @@ avgTimeToLeave = 12 # Average time for customer to leave the queue
 
 ##########################  COOK SETTINGS  ################################
 
-cookNumber = 50 # Number of cooks
+cookNumber = 5 # Number of cooks
 storageCapacity = 100 # Maximum storage capacity 
 storage = 0 # Storage at the beginning of the day
 
@@ -30,7 +31,7 @@ carServerNumber = 1 # Number of servers in the car entrance
 # Normal distributions for the skillsets of workers - Constants for Exponential distributions
 mainServerSkill = rnorm(mainServerNumber) + 3
 carServerSkill = rnorm(carServerNumber) + 3
-cookSkill = rnorm(cookNumber) + 5
+cookSkill = rnorm(cookNumber)/6 + 0.5
 
 ##########################  MEAL DISTRIBUTION  ############################
 
@@ -225,16 +226,39 @@ for(t in 1:simulationMinutes){
   }
   
   # Print Simulation Progress
-  cat(t, "/","720\n")
+  end_time <- Sys.time()
+  cat(t, "/","720 -", round(end_time - start_time, 2), "elapsed\n")
 }
 
 # Label dflogs data
-colnames(dflogs) <- c('Minute','Main Queue', 'Car Queue', 'storage', 'Sales', 'Materials', 'Wages', 'Profits')
+colnames(dflogs) <- c('Minute','Main Queue', 'Car Queue', 'Storage', 'Sales', 'Materials', 'Wages', 'Profits')
 
 # Data plotting
 qplot(dflogs$Minute, dflogs$storage)
 
 qplot(dflogs$Minute, dflogs$`Main Queue`)
+
+
+p1 <- ggplot(dflogs, aes(x = Minute, y = `Main Queue`, colour = Storage)) + geom_line() + ggtitle("Main Entrance")
+ 
+p2 <- ggplot(dflogs, aes(x = Minute, y = `Car Queue`)) + geom_line() + ggtitle("Drive-Through") 
+
+# Data Frame for pie chart
+dfpie <- data.frame("Category" = c('Profits', 'Materials', 'Wages'),
+                   "amount" = c(dflogs$Profits[simulationMinutes]/dflogs$Sales[simulationMinutes], dflogs$Materials[simulationMinutes]/dflogs$Sales[simulationMinutes], dflogs$Wages[simulationMinutes]/dflogs$Sales[simulationMinutes]))
+
+p3 <- ggplot(dfpie, aes(x="", y=amount, fill=Category)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste0(round(100*amount,1), "%")), position = position_stack(vjust=0.5)) +
+  labs(x = NULL, y = NULL) +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  scale_fill_brewer(palette="Blues")
+
+grid.arrange(p1, p2, p3, nrow=2, ncol=2)
 
 # Print program execution time
 end_time <- Sys.time()
