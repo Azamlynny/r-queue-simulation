@@ -243,10 +243,9 @@ p1 <- ggplot(dflogs) +
 p2 <- ggplot(dflogs, aes(x = Storage, fill = "orange")) +
   geom_density()
 
-
 # Data Frame for pie chart
 dfpie <- data.frame("Category" = c('Profits', 'Materials', 'Wages'),
-                   "amount" = c(dflogs$Profits[simulationMinutes]/dflogs$Sales[simulationMinutes], dflogs$Materials[simulationMinutes]/dflogs$Sales[simulationMinutes], dflogs$Wages[simulationMinutes]/dflogs$Sales[simulationMinutes]))
+                   "amount" = c(dflogs$Profits[length(dflogs[,1])]/dflogs$Sales[length(dflogs[,1])], dflogs$Materials[length(dflogs[,1])]/dflogs$Sales[length(dflogs[,1])], dflogs$Wages[length(dflogs[,1])]/dflogs$Sales[length(dflogs[,1])]))
 
 p3 <- ggplot(dfpie, aes(x="", y=amount, fill=Category)) +
   geom_bar(stat="identity", width=1) +
@@ -266,6 +265,13 @@ p4 <- ggplot(dfmain, aes(x = (as.numeric(`Served Time`) - as.numeric(`Entry Time
 p5 <- ggplot(dfcar, aes(x = (as.numeric(`Served Time`) - as.numeric(`Entry Time`)))) +
   geom_density(fill = "blue") +
   labs(x = "Time to Serve", title = "Time to Serve Drive Through")
+
+# Plot individual and all graphs
+grid.arrange(p1,nrow=1)
+grid.arrange(p2,nrow=1)
+grid.arrange(p3,nrow=1)
+grid.arrange(p4,nrow=1)
+grid.arrange(p5,nrow=1)
 
 grid.arrange(p1,p2,p3,p4,p5, nrow=2, ncol=3)
 
