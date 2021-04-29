@@ -234,14 +234,15 @@ for(t in 1:simulationMinutes){
 colnames(dflogs) <- c('Minute','Main Queue', 'Car Queue', 'Storage', 'Sales', 'Materials', 'Wages', 'Profits')
 
 # Data plotting
-qplot(dflogs$Minute, dflogs$storage)
 
-qplot(dflogs$Minute, dflogs$`Main Queue`)
+p1 <- ggplot(dflogs) +
+  geom_line(aes(x = Minute, y = `Main Queue`, colour = "Main")) +
+  geom_line(aes(x = Minute, y = `Car Queue`, colour = "Car")) +
+  ggtitle("Queue Lines in Entrances")
 
+p2 <- ggplot(dflogs, aes(x = Storage, fill = "orange")) +
+  geom_density()
 
-p1 <- ggplot(dflogs, aes(x = Minute, y = `Main Queue`, colour = Storage)) + geom_line() + ggtitle("Main Entrance")
- 
-p2 <- ggplot(dflogs, aes(x = Minute, y = `Car Queue`)) + geom_line() + ggtitle("Drive-Through") 
 
 # Data Frame for pie chart
 dfpie <- data.frame("Category" = c('Profits', 'Materials', 'Wages'),
@@ -251,14 +252,22 @@ p3 <- ggplot(dfpie, aes(x="", y=amount, fill=Category)) +
   geom_bar(stat="identity", width=1) +
   coord_polar("y", start=0) +
   geom_text(aes(label = paste0(round(100*amount,1), "%")), position = position_stack(vjust=0.5)) +
-  labs(x = NULL, y = NULL) +
+  labs(x = NULL, y = NULL, title = "Expense Breakdown") +
   theme_classic() +
   theme(axis.line = element_blank(),
         axis.text = element_blank(),
         axis.ticks = element_blank()) +
   scale_fill_brewer(palette="Blues")
 
-grid.arrange(p1, p2, p3, nrow=2, ncol=2)
+p4 <- ggplot(dfmain, aes(x = (as.numeric(`Served Time`) - as.numeric(`Entry Time`)))) +
+  geom_density(fill = "purple") +
+  labs(x = "Time to Serve", title = "Time to serve Main Entrance")
+
+p5 <- ggplot(dfcar, aes(x = (as.numeric(`Served Time`) - as.numeric(`Entry Time`)))) +
+  geom_density(fill = "blue") +
+  labs(x = "Time to Serve", title = "Time to Serve Drive Through")
+
+grid.arrange(p1,p2,p3,p4,p5, nrow=2, ncol=3)
 
 # Print program execution time
 end_time <- Sys.time()
