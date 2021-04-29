@@ -1,74 +1,90 @@
 library("ggplot2")
 library("dplyr")
 
+##########################  GENERAL SETTINGS  #############################
+
+simulationMinutes = 720 # 720 minutes = 12 hours - 8:00 AM to 8:00 PM
+wageRate = 8.00 # Wage paid per hour
 pricePerMeal = 4.00 # Price one meal unit is sold at
 costPerMeal = 2.80 # Price to produce one meal unit
-wageRate = 8.00 
 
-mainServerNumber = 1
-carServerNumber = 1
-mainServerSkill = rnorm(mainServerNumber) + 3 # Generates an array of normal distribution values 
+##########################  CUSTOMER SETTINGS  ############################
+
+mainEPM = 2 # Average number of main entrance customers per minute
+carEPM = 1 # Average number of car entrance customers per minute
+avgTimeToLeave = 12 # Average time for customer to leave the queue
+
+##########################  COOK SETTINGS  ################################
+
+cookNumber = 50 # Number of cooks
+storageCapacity = 100 # Maximum storage capacity 
+storage = 0 # Storage at the beginning of the day
+
+##########################  SERVER SETTINGS  ##############################
+
+mainServerNumber = 1 # Number of servers in the main entrance
+carServerNumber = 1 # Number of servers in the car entrance
+
+##########################  WORKER SKILLSETS  #############################
+
+# Normal distributions for the skillsets of workers - Constants for Exponential distributions
+mainServerSkill = rnorm(mainServerNumber) + 3
 carServerSkill = rnorm(carServerNumber) + 3
-
-cookNumber = 50
 cookSkill = rnorm(cookNumber) + 5
-qplot(cookSkill)
 
-storageCapacity = 100
-storage = 0
+##########################  MEAL DISTRIBUTION  ############################
 
-mainEPM = 2 # Main entrance per minute
-carEPM = 1 # Car entrance per minute
-simulationMinutes = 720 # 720 minutes = 12 hours
-mainEntry = rpois(simulationMinutes, mainEPM)
-carEntry = rpois(simulationMinutes, carEPM)
-
-avgTimeToLeave = 12
-mainLeave = ceiling(rexp(sum(mainEntry),rate = 1/avgTimeToLeave))
-carLeave = ceiling(rexp(sum(carEntry),rate = 1/avgTimeToLeave))
-qplot(mainLeave)
-
+# Normal distributions for meals purchased by customers
 mainMealPrice = round(rnorm(sum(mainEntry)) * 3 + 10,2) 
 carMealPrice = round(rnorm(sum(carEntry)) * 3 + 12,2) 
 
-qplot(carEntry)
-qplot(carMealPrice)
+###########################################################################
+###########################################################################
+###########################################################################
+
+start_time <- Sys.time() # Execution time tracking
+
+mainEntry = rpois(simulationMinutes, mainEPM)
+carEntry = rpois(simulationMinutes, carEPM)
+
+mainLeave = ceiling(rexp(sum(mainEntry),rate = 1/avgTimeToLeave))
+carLeave = ceiling(rexp(sum(carEntry),rate = 1/avgTimeToLeave))
+
 
 dflogs <- data.frame () # Dataframe to track queues
+# Temporary variables used in dflogs
 mainQueue = 0
 carQueue = 0
 sales = 0
 materials = 0
 profits = 0
 
-dfmain <- data.frame () # Dataframe to track main queue
-dfcar <- data.frame () # Dataframe to track car queue
+dfmain <- data.frame () # Tracks main queue
+dfcar <- data.frame () # Tracks car queue
+dfmainserver <- data.frame () # Tracks servers in main entrance
+dfcarserver <- data.frame () # Tracks servers in main entrance
+dfcook <- data.frame () # Tracks cooks
+
+# Temprorary variables for simulation
 mainClientNumber = 0
 carClientNumber = 0
-
-
+mainPlace <- 1
+carPlace <- 1
 mainInitialized = FALSE
 carInitialized = FALSE
 
-dfmainserver <- data.frame () # Dataframe to track servers in main entrance
-dfcarserver <- data.frame () # Dataframe to track servers in main entrance
-dfcook <- data.frame () # Dataframe to track cooks
+# Generate exponential distributions for servers and cooks
 for(i in 1:mainServerNumber){
   dfmainserver <- rbind(dfmainserver, ceiling(rexp(720,rate = 1/mainServerSkill[i])))
 }
-hist(as.integer(dfmainserver[1,]))
 for(i in 1:mainServerNumber){
   dfcarserver <- rbind(dfcarserver, ceiling(rexp(720,rate = 1/carServerSkill[i])))
 }
-hist(as.integer(dfcarserver[1,]))
-
 for(i in 1:cookNumber){
   dfcook <- rbind(dfcook, ceiling(rexp(720,rate = 1/cookSkill[i])))
 }
-hist(as.integer(dfcook[1,]))
 
-
-# Convert to timestamp notation
+# Convert exponential distribution to timestamp notation for iterative scheduling 
 for(i in 1:cookNumber){
   for(j in 1:(length(dfcook[i,]) - 1)){
     dfcook[i,j+1] <- dfcook[i,j+1] + dfcook[i,j] 
@@ -85,11 +101,10 @@ for(i in 1:carServerNumber){
   }
 }
 
-mainPlace <- 1
-carPlace <- 1
-
+# Iterative time scheduling simulation
 for(t in 1:simulationMinutes){
   
+  # Entrance of customers
   if(mainEntry[t] != 0){
     for(i in 1:mainEntry[t]){
       mainClientNumber <- mainClientNumber + 1
@@ -99,7 +114,6 @@ for(t in 1:simulationMinutes){
       }
     }
   }
-  
   if(carEntry[t] != 0){
     for(i in 1:carEntry[t]){
       carClientNumber <- carClientNumber + 1
@@ -177,15 +191,13 @@ for(t in 1:simulationMinutes){
     }
   }
   
-
-  
+  # Statistic tracking 
   mainQueue <- mainQueue + mainEntry[t]
   carQueue <- carQueue + carEntry[t]
-
   wages <- round((carServerNumber + mainServerNumber + cookNumber) * wageRate * (t/60),2)
-  
   profits <- sales - materials - wages
   
+  # Statistics stored in dflogs for graphing
   dflogs <- rbind(dflogs, c(t, mainQueue, carQueue, storage, sales, materials, wages, profits))
   
   # Main and car queue leaving modeled by exponential distribution
@@ -211,20 +223,19 @@ for(t in 1:simulationMinutes){
       }
     }
   }
+  
+  # Print Simulation Progress
   cat(t, "/","720\n")
-  # if(t %% 60 == 0){
-  #   print(cat(t, "/","720"))
-  # }
 }
 
+# Label dflogs data
 colnames(dflogs) <- c('Minute','Main Queue', 'Car Queue', 'storage', 'Sales', 'Materials', 'Wages', 'Profits')
 
-print(sum(mainEntry))
-
-y_rexp <- ceiling(rexp(1, rate = 0.2))
-hist(y_rexp)
-print(y_rexp)
-
+# Data plotting
 qplot(dflogs$Minute, dflogs$storage)
 
 qplot(dflogs$Minute, dflogs$`Main Queue`)
+
+# Print program execution time
+end_time <- Sys.time()
+cat("Execution time:", end_time - start_time, "minutes")
