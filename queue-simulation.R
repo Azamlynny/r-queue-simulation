@@ -155,6 +155,27 @@ for(t in 1:simulationMinutes){
       }
     }
   }
+  if(carInitialized){
+    for(i in 1:length(dfcar[,1])){
+      if(dfcar[i,3] == "Ordering" && storage >= round((as.numeric(dfcar[i,2]) / pricePerMeal),2)){
+        for(j in 1:length(dfcarserver[,1])){
+          for(k in 1:length(dfcarserver[j,])){
+            if(dfcarserver[j,k] > t){
+              break
+            }
+            if(dfcarserver[j,k] == t){
+              carPlace <- carPlace + 1
+              sales <- sales + as.numeric(dfcar[i,2])
+              storage <- round(storage - (as.numeric(dfcar[i,2]) / pricePerMeal), 2)
+              dfcar[i,6] <- t
+              dfcar[i,3] <- "Served"
+              carQueue <- carQueue - 1
+            }
+          }
+        }
+      }
+    }
+  }
   
 
   
@@ -190,7 +211,7 @@ for(t in 1:simulationMinutes){
       }
     }
   }
-  print(cat(t, "/","720"))
+  cat(t, "/","720\n")
   # if(t %% 60 == 0){
   #   print(cat(t, "/","720"))
   # }
